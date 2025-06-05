@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twin Transition Ideenwerkzeug</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2E8B57 0%, #20B2AA 50%, #4169E1 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        h1 {
+            color: #2E8B57;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #4169E1;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            font-size: 1.2em;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #4169E1;
+            box-shadow: 0 0 10px rgba(65, 105, 225, 0.3);
+        }
+
+        button {
+            background: linear-gradient(45deg, #2E8B57, #20B2AA);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .secondary-btn {
+            background: linear-gradient(45deg, #4169E1, #6495ED);
+        }
+
+        .creativity-booster {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            font-style: italic;
+            font-size: 1.1em;
+            color: #B8860B;
+            display: none;
+        }
+
+        .creativity-booster.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timer {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .timer.warning {
+            animation: pulse 1s infinite;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        button:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .ideas-list {
+            background: rgba(46, 139, 87, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .idea-item {
+            background: white;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2E8B57;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .idea-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .idea-item.selected {
+            background: #E8F5E8;
+            border-left-color: #4169E1;
+        }
+
+        .prompt-box {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #2E8B57, #20B2AA);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .warning-text {
+            color: #FF6B6B;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+
+        .success-text {
+            color: #2E8B57;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Schritt 1: Themenfeld eingeben -->
+        <div class="card step active" id="step1">
+            <h1>🌱💻 Twin Transition Ideenwerkzeug</h1>
+            <div class="subtitle">Entwickle konkrete Ideen für nachhaltige und digitale Bildung</div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 33%"></div>
+            </div>
+            
+            <h2><span class="icon">🎯</span>Schritt 1: Dein Themenfeld</h2>
+            <p style="margin-bottom: 20px;">Gib eines deiner identifizierten Themenfelder ein, zu dem du konkrete Ideen entwickeln möchtest:</p>
+            
+            <input type="text" id="themenfeld" placeholder="z.B. Digitale Kompetenzen für Nachhaltigkeit, KI in der Umweltbildung..." maxlength="200" oninput="updateStartButton()">
+            
+            <button id="start-btn" onclick="startIdeensammlung()" disabled style="opacity: 0.5;">
+                <span>🚀</span> Ideensammlung starten
+            </button>
+        </div>
+
+        <!-- Schritt 2: Ideensammlung mit Timer -->
+        <div class="card step" id="step2">
+            <h1>🌱💻 Twin Transition Ideenwerkzeug</h1>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 66%"></div>
+            </div>
+            
+            <h2><span class="icon">💡</span>Schritt 2: Ideensammlung</h2>
+            <p><strong>Themenfeld:</strong> <span id="themenfeld-display"></span></p>
+            
+            <div class="timer" id="timer">⏰ Zeit: 5:00</div>
+            <div class="warning-text">Du hast 5 Minuten Zeit! Sammle so viele Ideen wie möglich - auch verrückte!</div>
+            
+            <button class="secondary-btn" onclick="getCreativityBooster()">
+                <span>✨</span> Kreativitäts-Booster holen
+            </button>
+            
+            <div class="creativity-booster" id="creativity-booster"></div>
+            
+            <textarea id="neue-idee" placeholder="Gib hier deine Idee ein..." rows="3"></textarea>
+            <button onclick="addIdee()">
+                <span>➕</span> Idee hinzufügen
+            </button>
+            
+            <div class="ideas-list" id="ideas-display" style="display: none;">
+                <h3>Deine Ideen:</h3>
+                <div id="ideas-container"></div>
+            </div>
+        </div>
+
+        <!-- Schritt 3: Ideenauswahl und Prompt-Generation -->
+        <div class="card step" id="step3">
+            <h1>🌱💻 Twin Transition Ideenwerkzeug</h1>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+            </div>
+            
+            <h2><span class="icon">🎯</span>Schritt 3: Ideenauswahl & KI-Prompt</h2>
+            <div class="success-text">Großartig! Du hast <span id="total-ideas"></span> Ideen gesammelt!</div>
+            
+            <p><strong>Themenfeld:</strong> <span id="themenfeld-final"></span></p>
+            
+            <p style="margin: 20px 0;"><strong>Wähle bis zu 3 Ideen aus, die du weiterentwickeln möchtest:</strong></p>
+            
+            <div class="ideas-list" id="final-ideas-list"></div>
+            
+            <button onclick="generatePrompt()" id="generate-btn" style="display: none;">
+                <span>🤖</span> KI-Prompt generieren
+            </button>
+            
+            <div id="prompt-section" style="display: none;">
+                <h3>Dein personalisierter KI-Prompt:</h3>
+                <div class="prompt-box" id="generated-prompt"></div>
+                <button onclick="copyPrompt()">
+                    <span>📋</span> Prompt kopieren
+                </button>
+            </div>
+            
+            <button class="secondary-btn" onclick="restart()">
+                <span>🔄</span> Neues Themenfeld bearbeiten
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let timerInterval;
+        let timeLeft = 300; // 5 Minuten in Sekunden
+        let ideas = [];
+        let selectedIdeas = [];
+        let themenfeld = '';
+
+        const creativityBoosters = [
+            "💭 Was würde Lisa Simpson an deiner Stelle tun?",
+            "💰 Wie würdest du die Herausforderung angehen, wenn Geld keine Rolle spielen würde?",
+            "🌍 Stell dir vor, du müsstest deine Idee in einem anderen Land umsetzen - was würde sich ändern?",
+            "🤖 Wie könnte KI dir bei der Umsetzung helfen?",
+            "👶 Wie würdest du deine Idee einem 8-jährigen Kind erklären?",
+            "🎮 Wie könntest du deine Idee spielerisch gestalten?",
+            "📱 Welche App würde deine Zielgruppe am liebsten nutzen?",
+            "🌱 Wie könntest du dabei gleichzeitig die Umwelt schützen?",
+            "👥 Wen könntest du als ungewöhnlichen Partner gewinnen?",
+            "⚡ Was wäre die verrückteste Art, deine Idee umzusetzen?",
+            "🔮 Wie würde deine Idee in 10 Jahren aussehen?",
+            "🏠 Wie könntest du von zu Hause aus starten?",
+            "📺 Stell dir vor, du hättest eine eigene TV-Show - was würdest du zeigen?",
+            "🎪 Wie könntest du ein Event daraus machen?",
+            "📚 Welches Buch würdest du zu deinem Thema schreiben?",
+            "🌟 Was würde passieren, wenn du das Gegenteil von dem machst, was alle erwarten?",
+            "🔗 Wie könntest du Digitalisierung und Nachhaltigkeit clever verbinden?",
+            "🎨 Wie würde ein Künstler an deine Herausforderung herangehen?",
+            "⚖️ Wie könntest du dabei soziale Gerechtigkeit fördern?",
+            "🚀 Stell dir vor, du hättest unbegrenzte technische Möglichkeiten - was würdest du entwickeln?",
+            "🏆 Was wäre dein Traumpreis für diese Idee?",
+            "🌈 Wie könntest du verschiedene Generationen zusammenbringen?",
+            "🔄 Wie könntest du aus einem Problem eine Chance machen?",
+            "🎯 Was ist das Kleinste, womit du heute anfangen könntest?",
+            "🪟 Schau aus dem Fenster - was siehst du, das dich inspirieren könnte?",
+            "☕ Was liegt gerade auf deinem Schreibtisch? Wie könnte das deine Idee beeinflussen?",
+            "🎵 Welche Musik hörst du gerade? Wie würde deine Idee klingen?",
+            "👕 Welche Farbe hat dein Lieblings-T-Shirt? Was hat das mit deiner Idee zu tun?",
+            "🌡️ Wie ist das Wetter heute? Wie passt deine Idee zum aktuellen Wetter?",
+            "🍎 Was hast du heute gegessen? Wie könnte Ernährung in deine Idee einfließen?"
+        ];
+
+        function startIdeensammlung() {
+            const themeInput = document.getElementById('themenfeld');
+            if (!themeInput.value.trim()) {
+                showMessage('Bitte gib erst dein Themenfeld ein! 📝', 'warning');
+                return;
+            }
+            
+            themenfeld = themeInput.value.trim();
+            document.getElementById('themenfeld-display').textContent = themenfeld;
+            
+            showStep(2);
+            startTimer();
+        }
+
+        function updateStartButton() {
+            const themeInput = document.getElementById('themenfeld');
+            const startBtn = document.getElementById('start-btn');
+            
+            if (themeInput.value.trim()) {
+                startBtn.disabled = false;
+                startBtn.style.opacity = '1';
+            } else {
+                startBtn.disabled = true;
+                startBtn.style.opacity = '0.5';
+            }
+        }
+
+        function showMessage(text, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                animation: slideInRight 0.3s ease-out;
+                ${type === 'success' ? 'background: linear-gradient(45deg, #2E8B57, #20B2AA);' : ''}
+                ${type === 'warning' ? 'background: linear-gradient(45deg, #FF6B6B, #FF8E53);' : ''}
+                ${type === 'info' ? 'background: linear-gradient(45deg, #4169E1, #6495ED);' : ''}
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 3000);
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                const timerElement = document.getElementById('timer');
+                
+                timerElement.textContent = `⏰ Zeit: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 60) {
+                    timerElement.classList.add('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishIdeensammlung();
+                }
+            }, 1000);
+        }
+
+        function getCreativityBooster() {
+            const boosterElement = document.getElementById('creativity-booster');
+            const randomBooster = creativityBoosters[Math.floor(Math.random() * creativityBoosters.length)];
+            
+            boosterElement.textContent = randomBooster;
+            boosterElement.classList.remove('show');
+            setTimeout(() => boosterElement.classList.add('show'), 100);
+        }
+
+        function addIdee() {
+            const ideaInput = document.getElementById('neue-idee');
+            const idea = ideaInput.value.trim();
+            
+            if (!idea) return;
+            
+            ideas.push(idea);
+            ideaInput.value = '';
+            
+            updateIdeasDisplay();
+        }
+
+        function updateIdeasDisplay() {
+            const container = document.getElementById('ideas-container');
+            const display = document.getElementById('ideas-display');
+            
+            container.innerHTML = ideas.map((idea, index) => 
+                `<div class="idea-item">${index + 1}. ${idea}</div>`
+            ).join('');
+            
+            display.style.display = 'block';
+        }
+
+        function finishIdeensammlung() {
+            clearInterval(timerInterval);
+            showStep(3);
+            setupFinalStep();
+        }
+
+        function setupFinalStep() {
+            document.getElementById('themenfeld-final').textContent = themenfeld;
+            document.getElementById('total-ideas').textContent = ideas.length;
+            
+            const finalList = document.getElementById('final-ideas-list');
+            finalList.innerHTML = ideas.map((idea, index) => 
+                `<div class="idea-item" onclick="toggleIdea(${index})" data-index="${index}">
+                    <input type="checkbox" style="margin-right: 10px;">
+                    ${idea}
+                </div>`
+            ).join('');
+        }
+
+        function toggleIdea(index) {
+            const ideaElement = document.querySelector(`[data-index="${index}"]`);
+            const checkbox = ideaElement.querySelector('input[type="checkbox"]');
+            
+            if (selectedIdeas.includes(index)) {
+                selectedIdeas = selectedIdeas.filter(i => i !== index);
+                ideaElement.classList.remove('selected');
+                checkbox.checked = false;
+            } else if (selectedIdeas.length < 3) {
+                selectedIdeas.push(index);
+                ideaElement.classList.add('selected');
+                checkbox.checked = true;
+            } else {
+                alert('Du kannst maximal 3 Ideen auswählen!');
+                return;
+            }
+            
+            document.getElementById('generate-btn').style.display = 
+                selectedIdeas.length > 0 ? 'inline-flex' : 'none';
+        }
+
+        function generatePrompt() {
+            const selectedIdeasText = selectedIdeas.map(index => ideas[index]).join('\n- ');
+            
+            const prompt = `Hey! Schön, dass du da bist. Ich stecke gerade in einem spannenden Projekt und brauche deine Hilfe beim Denken.
+
+Ich beschäftige mich intensiv mit der **Twin Transition** - du weißt schon, diese faszinierende Idee, dass wir Digitalisierung und Nachhaltigkeit nicht getrennt voneinander betrachten sollten, sondern sie intelligent miteinander verweben können. Stell dir vor: Technologie, die nicht nur cool und praktisch ist, sondern auch unseren Planeten rettet. Ziemlich genial, oder?
+
+In der Erwachsenenbildung will ich lernen, wie ich Menschen dazu befähigen kann, in dieser digitalisierten Welt nicht nur zu überleben, sondern sie nachhaltig mitzugestalten. Es geht darum, dass Lernende selbst zu Akteuren des Wandels werden.
+
+**Mein Themenfeld:** ${themenfeld}
+
+Ich hab mir den Kopf zerbrochen und bin auf diese drei Ideen gekommen, die mich richtig faszinieren:
+- ${selectedIdeasText}
+
+Jetzt stehe ich vor dem typischen Problem: Viele Ideen im Kopf, aber wo fange ich eigentlich an? Du kennst das sicher auch - manchmal sieht man den Wald vor lauter Bäumen nicht.
+
+Hier ist meine Bitte an dich: Lass uns gemeinsam herausfinden, welche dieser Ideen wirklich das Zeug dazu hat, mein nächster konkreter Schritt zu werden. Nicht irgendein theoretisches Konzept, sondern etwas, womit ich in den nächsten zwei Wochen loslegen kann.
+
+Aber bitte nicht mit einer Checkliste oder einem starren Fragenkatalog! Ich brauche jemanden, der mit mir denkt, mich herausfordert und dabei hilft, die Sache von verschiedenen Seiten zu betrachten. Sei ruhig neugierig, hinterfrage meine Annahmen und lass uns gemeinsam entdecken, was wirklich möglich ist. Bitte gehe dabei immer schrittweise vor: eine Frage an mich, dann warte meine Antwort ab. Dann weiter ...
+
+Womit würdest du anfangen? Was denkst du - welche der drei Ideen lässt dich aufhorchen?`;
+
+            document.getElementById('generated-prompt').textContent = prompt;
+            document.getElementById('prompt-section').style.display = 'block';
+        }
+
+        function copyPrompt() {
+            const promptText = document.getElementById('generated-prompt').textContent;
+            navigator.clipboard.writeText(promptText).then(() => {
+                showMessage('Prompt kopiert! 📋', 'success');
+            }).catch(() => {
+                showMessage('Kopieren fehlgeschlagen - bitte manuell markieren und kopieren', 'warning');
+            });
+        }
+
+        function restart() {
+            currentStep = 1;
+            ideas = [];
+            selectedIdeas = [];
+            themenfeld = '';
+            timeLeft = 300;
+            clearInterval(timerInterval);
+            
+            document.getElementById('themenfeld').value = '';
+            document.getElementById('neue-idee').value = '';
+            document.getElementById('creativity-booster').classList.remove('show');
+            document.getElementById('ideas-display').style.display = 'none';
+            document.getElementById('timer').classList.remove('warning');
+            
+            showStep(1);
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+        }
+
+        // Enter-Taste Unterstützung
+        document.getElementById('themenfeld').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('start-btn').disabled) {
+                startIdeensammlung();
+            }
+        });
+
+        document.getElementById('neue-idee').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                addIdee();
+            }
+        });
+
+        // Initialisierung
+        window.addEventListener('load', () => {
+            updateStartButton();
+        });
+    </script>
+</body>
+</html>
